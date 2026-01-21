@@ -1,7 +1,9 @@
 # Compress agent context for performance
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.16.0</span>
+  <span class="lst-supported">Supported in ADK</span>
+  <span class="lst-python">Python v1.16.0</span>
+  <span class="lst-java">Java v0.6.0</span>
 </div>
 
 As an ADK agent runs it collects *context* information, including user
@@ -25,6 +27,7 @@ Configuration setting to the App object of your workflow. As part of the
 configuration, you must specify a compaction interval and overlap size, as shown
 in the following sample code:
 
+=== "Python"
 ```python
 from google.adk.apps.app import App
 from google.adk.apps.app import EventsCompactionConfig
@@ -37,6 +40,22 @@ app = App(
         overlap_size=1          # Include last invocation from the previous window.
     ),
 )
+```
+
+=== "Java"
+```java
+import com.google.adk.runner.Runner;
+import com.google.adk.summarizer.EventsCompactionConfig;
+
+Runner runner = Runner.builder()
+    .appName("my-agent")
+    .agent(rootAgent)
+    .eventsCompactionConfig(
+        new EventsCompactionConfig(
+            /* compactionInteval= */ 3, // Trigger compaction every 3 new invocations.
+            /* overlapSize= */ 1 // Include last invocation from the previous window.
+            ))
+    .build();
 ```
 
 Once configured, the ADK `Runner` handles the compaction process in the
@@ -80,6 +99,7 @@ You can customize the process of context compression by defining a summarizer.
 The LlmEventSummarizer class allows you to specify a particular model for summarization.
 The following code example demonstrates how to define and configure a custom summarizer:
 
+=== "Python"
 ```python
 from google.adk.apps.app import App, EventsCompactionConfig
 from google.adk.apps.llm_event_summarizer import LlmEventSummarizer
@@ -101,6 +121,32 @@ app = App(
         summarizer=my_summarizer,
     ),
 )
+```
+
+=== "Java"
+```java
+import com.google.adk.models.Gemini;
+import com.google.adk.runner.Runner;
+import com.google.adk.summarizer.EventsCompactionConfig;
+import com.google.adk.summarizer.LlmEventSummarizer;
+
+// Define the AI model to be used for summarization
+Gemini model = Gemini.builder().modelName("gemini-2.5-flash").build();
+
+// Create the summarizer with the custom model
+LlmEventSummarizer summarizer = new LlmEventSummarizer(model);
+
+// Configure the Runner with the custom summarizer and compaction settings
+Runner.builder()
+    .appName("my-agent")
+    .agent(rootAgent)
+    .eventsCompactionConfig(
+        new EventsCompactionConfig(
+            /* compactionInteval= */ 3, // Trigger compaction every 3 new invocations.
+            /* overlapSize= */ 1, // Include last invocation from the previous window.
+            /* summarizer= */ summarizer
+            ))
+    .build();
 ```
 
 You can further refine the operation of the `SlidingWindowCompactor` by
